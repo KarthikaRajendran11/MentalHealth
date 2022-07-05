@@ -11,7 +11,6 @@ import (
 
 // Client gets or saves a profile to a database
 type Client struct {
-	// db  *goqu.Database
 	sql *sql.DB
 }
 
@@ -31,7 +30,6 @@ func NewClient(ctx context.Context, dbURL string) (*Client, error) {
 	defer cancel()
 
 	return &Client{
-		// db:  goqu.New("postgres", sqlDB),
 		sql: sqlDB,
 	}, nil
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	server "github.com/mentalhealthco/internal"
@@ -13,12 +14,10 @@ import (
 
 func main() {
 
-	client, err := postgres.NewClient(context.Background(), "postgres://postgres:kebDeR7QfCsK4VZg9XiqzHC4@mental-health-co-reporting.cqnhjzkxsrgy.us-east-1.rds.amazonaws.com/mentalhealthco")
+	client, err := postgres.NewClient(context.Background(), os.Getenv("CONXSTR"))
 	if err != nil {
 		panic(err)
 	}
-
-	// e := gin.Default()
 
 	service := server.NewService(client)
 
