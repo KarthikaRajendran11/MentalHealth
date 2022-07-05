@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -29,6 +30,8 @@ func main() {
 
 	service.RegisterRoutes(ginRouter)
 
-	ginRouter.Run()
-
+	err = ginRouter.Run()
+	if err != nil {
+		fmt.Fprintf(os.Stdout, err.Error())
+	}
 }

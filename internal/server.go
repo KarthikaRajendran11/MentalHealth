@@ -22,6 +22,7 @@ type Service struct {
 }
 
 func (s *Service) RegisterRoutes(r gin.IRoutes) {
+	r.GET("/", s.handleHealthCheck)
 	r.POST("history", s.handleWrite)
 }
 
@@ -29,6 +30,11 @@ func NewService(writer Writer) *Service {
 	return &Service{
 		writer: writer,
 	}
+}
+
+func (s *Service) handleHealthCheck(c *gin.Context) {
+	c.Status(http.StatusOK)
+	return
 }
 
 func (s *Service) handleWrite(c *gin.Context) {
