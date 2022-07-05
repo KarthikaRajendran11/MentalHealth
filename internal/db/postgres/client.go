@@ -34,9 +34,9 @@ func NewClient(ctx context.Context, dbURL string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) Write(url string) error {
+func (c *Client) Write(urlEmail ...string) error {
 
-	_, err := c.sql.Exec(`INSERT INTO urlhistory(url, visitTime) VALUES($1, $2)`, url, time.Now().UTC())
+	_, err := c.sql.Exec(`INSERT INTO urlhistory(url, email, visitTime) VALUES($1, $2, $3)`, urlEmail[0], urlEmail[1], time.Now().UTC())
 	if err != nil {
 		return err
 	}
