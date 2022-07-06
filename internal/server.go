@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
 type Writer interface {
@@ -24,7 +25,6 @@ type Uploader interface {
 }
 
 type Service struct {
-	// should accept an interface to write stuff to postgres DB
 	writer   Writer
 	uploader Uploader
 }
@@ -53,7 +53,7 @@ func (s *Service) handleHealthCheck(c *gin.Context) {
 func (s *Service) handleUpload(c *gin.Context) {
 	var request UploadOptions
 	if err := c.ShouldBindJSON(&request); err != nil {
-		fmt.Fprintln(os.Stdout, err.Error())
+		fmt.Fprintln(os.Stdout, errors.Wrap(err, "failed to bind json payload to request struct").Error())
 		c.Status(http.StatusBadRequest)
 		return
 	}
@@ -62,13 +62,13 @@ func (s *Service) handleUpload(c *gin.Context) {
 	fmt.Fprintln(os.Stdout, request.BucketName)
 	data, err := base64.StdEncoding.DecodeString(request.Content)
 	if err != nil {
-		fmt.Fprintln(os.Stdout, err.Error())
+		fmt.Fprintln(os.Stdout, errors.Wrap(err, "failed to base64 decode request content").Error())
 		c.Status(http.StatusBadRequest)
 		return
 	}
 	err = s.uploader.Upload(c, request.FileName, request.BucketName, data)
 	if err != nil {
-		fmt.Fprintln(os.Stdout, err.Error())
+		fmt.Fprintln(os.Stdout, errors.Wrap(err, "failed to upload file to s3").Error())
 		c.Status(http.StatusBadRequest)
 		return
 	}
@@ -99,10 +99,9 @@ func (s *Service) handleWrite(c *gin.Context) {
 
 	err = s.writer.Write(url, email)
 	if err != nil {
-		fmt.Fprintln(os.Stdout, err.Error())
+		fmt.Fprintln(os.Stdout, errors.Wrap(err, "failed to write to postgres DB").Error())
 		c.Status(http.StatusBadRequest)
 		return
 	}
-
 	c.Status(http.StatusOK)
 }

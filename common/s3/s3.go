@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/pkg/errors"
 )
 
 type S3Uploader struct {
@@ -44,14 +45,14 @@ func NewS3Uploader() (*S3Uploader, error) {
 	creds := credentials.NewStaticCredentials(accessKeyID, secretAccessKey, token)
 	_, err := creds.Get()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to get credentials")
 	}
 	sess, err := session.NewSession(&aws.Config{
 		Region:      aws.String(region),
 		Credentials: creds,
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to get session")
 	}
 
 	return &S3Uploader{
