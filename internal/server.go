@@ -46,6 +46,10 @@ func (s *Service) handleHealthCheck(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// TODO: Secure recog-bucket-mental-helathco bucket to protect user privacy
+// Set an expiry data on bucket so the user images are automatically deleted after certain amount of time
+// Set ACL for bucket. As of July 6th 2022, the bucket has public access
+// Must do above before production
 func (s *Service) handleUpload(c *gin.Context) {
 	var request UploadOptions
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -71,6 +75,8 @@ func (s *Service) handleUpload(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// TODO: Encrypt email (encryption at rest maybe) while storing in postgres DB to protect user identity
+// Must to before production
 func (s *Service) handleWrite(c *gin.Context) {
 
 	urlBytes, err := io.ReadAll(c.Request.Body)
