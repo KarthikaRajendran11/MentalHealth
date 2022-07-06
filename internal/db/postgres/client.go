@@ -26,20 +26,15 @@ func NewClient(ctx context.Context, dbURL string) (*Client, error) {
 		return nil, err
 	}
 
-	ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
 	return &Client{
 		sql: sqlDB,
 	}, nil
 }
 
 func (c *Client) Write(urlEmail ...string) error {
-
 	_, err := c.sql.Exec(`INSERT INTO urlhistory(url, email, visitTime) VALUES($1, $2, $3)`, urlEmail[0], urlEmail[1], time.Now().UTC())
 	if err != nil {
 		return err
 	}
-
 	return nil
 }

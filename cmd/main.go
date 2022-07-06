@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mentalhealthco/common/s3"
 	server "github.com/mentalhealthco/internal"
 	"github.com/mentalhealthco/internal/db/postgres"
 
@@ -15,21 +16,23 @@ import (
 
 func main() {
 
-	client, err := postgres.NewClient(context.Background(), os.Getenv("CONXSTR"))
-	if err != nil {
-		panic(err)
-	}
-
-	service := server.NewService(client)
-
 	gin.SetMode(gin.ReleaseMode)
 	ginRouter := gin.New()
 	// Use gin.Recovery() to any panic and return a 500 instead of crashing
 	// TODO: ZENREACH-23015 - use custom recovery from gin when released
 	ginRouter.Use(gin.Recovery())
-
+	// TODO : pass gin context
+	// TODO : Add metrics to track number of requests per second
+	client, err := postgres.NewClient(context.Background(), os.Getenv("CONXSTR"))
+	if err != nil {
+		panic(err)
+	}
+	uploader, err := s3.NewS3Uploader()
+	if err != nil {
+		panic(err)
+	}
+	service := server.NewService(client, uploader)
 	service.RegisterRoutes(ginRouter)
-
 	err = ginRouter.Run()
 	if err != nil {
 		fmt.Fprintf(os.Stdout, err.Error())
