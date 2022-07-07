@@ -1,6 +1,3 @@
-// build an empty server struct
-// import packages required to connect to postgres DB
-// use them to perform an insert
 package server
 
 import (
@@ -32,7 +29,9 @@ type Service struct {
 func (s *Service) RegisterRoutes(r gin.IRoutes) {
 	r.GET("_status", s.handleHealthCheck)
 	r.POST("history", s.handleWrite)
+	r.POST("website", s.handleWebsite)
 	r.POST("upload", s.handleUpload)
+	r.OPTIONS("website", s.handleOptions)
 }
 
 func NewService(writer Writer, uploader Uploader) *Service {
@@ -40,6 +39,13 @@ func NewService(writer Writer, uploader Uploader) *Service {
 		writer:   writer,
 		uploader: uploader,
 	}
+}
+
+func (s *Service) handleOptions(c *gin.Context) {
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept, User-Agent, Origin")
+	c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	c.Status(http.StatusOK)
 }
 
 func (s *Service) handleHealthCheck(c *gin.Context) {
@@ -77,6 +83,31 @@ func (s *Service) handleUpload(c *gin.Context) {
 
 // TODO: Encrypt email (encryption at rest maybe) while storing in postgres DB to protect user identity
 // Must to before production
+func (s *Service) handleWebsite(c *gin.Context) {
+
+	var request WebsiteOptions
+	if err := c.ShouldBindJSON(&request); err != nil {
+		fmt.Fprintln(os.Stdout, errors.Wrap(err, "failed to bind json payload to request struct").Error())
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	url := request.URL
+	email := request.Email
+
+	err := s.writer.Write(url, email)
+	if err != nil {
+		fmt.Fprintln(os.Stdout, errors.Wrap(err, "failed to write to postgres DB").Error())
+		c.Status(http.StatusBadRequest)
+		return
+	}
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	// access-control-allow-headers
+	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept, User-Agent, Origin")
+	c.Status(http.StatusOK)
+}
+
 func (s *Service) handleWrite(c *gin.Context) {
 
 	urlBytes, err := io.ReadAll(c.Request.Body)
@@ -88,12 +119,7 @@ func (s *Service) handleWrite(c *gin.Context) {
 	_s := string(urlBytes)
 	fmt.Fprintln(os.Stdout, _s)
 	content := strings.Split(_s, "url: ")
-	fmt.Fprintf(os.Stdout, "len content : %d\n", len(content))
-	fmt.Fprintf(os.Stdout, "content : %s\n", content[0])
-	fmt.Fprintf(os.Stdout, "content : %s\n", content[1])
 	urlEmail := strings.Split(content[1], ", email: ")
-	fmt.Fprintf(os.Stdout, "urlEmail : %s\n", urlEmail[0])
-	fmt.Fprintf(os.Stdout, "urlEmail : %s\n", urlEmail[1])
 	url := urlEmail[0]
 	email := urlEmail[1]
 
@@ -103,5 +129,8 @@ func (s *Service) handleWrite(c *gin.Context) {
 		c.Status(http.StatusBadRequest)
 		return
 	}
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept, User-Agent, Origin")
+	c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 	c.Status(http.StatusOK)
 }

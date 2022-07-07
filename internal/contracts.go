@@ -5,3 +5,8 @@ type UploadOptions struct {
 	BucketName string `json:"bucket_name"`
 	Content    string `json:"content"`
 }
+
+type WebsiteOptions struct {
+	URL   string `json:url`
+	Email string `json:email`
+}

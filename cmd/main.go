@@ -1,3 +1,5 @@
+// TODO: settings.yml to store env variables and secrets
+// Settings library to handle the same
 package main
 
 import (
@@ -24,7 +26,11 @@ func main() {
 	ginRouter.Use(gin.Recovery())
 	// TODO : pass gin context
 	// TODO : Add metrics to track number of requests per second
-	client, err := postgres.NewClient(context.Background(), os.Getenv("CONXSTR"))
+	connectionStr, ok := os.LookupEnv("CONXSTR")
+	if !ok {
+		fmt.Fprintln(os.Stdout, errors.New("failed to get connection string").Error())
+	}
+	client, err := postgres.NewClient(context.Background(), connectionStr)
 	if err != nil {
 		fmt.Fprintln(os.Stdout, errors.Wrap(err, "failed to create postgres client").Error())
 	}

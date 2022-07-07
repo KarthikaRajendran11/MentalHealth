@@ -18,6 +18,7 @@ type S3Uploader struct {
 	*s3manager.Uploader
 }
 
+// TODO : Add retry logic
 func (s *S3Uploader) Upload(ctx context.Context, fileName, bucket string, content []byte) error {
 	contentType := http.DetectContentType(content)
 	// TODO: check if need to set expiry time and ACL
@@ -38,8 +39,14 @@ func (s *S3Uploader) Upload(ctx context.Context, fileName, bucket string, conten
 }
 
 func NewS3Uploader() (*S3Uploader, error) {
-	accessKeyID := os.Getenv("ACCESSKEYID")
-	secretAccessKey := os.Getenv("SECRETACCESSKEY")
+	accessKeyID, ok := os.LookupEnv("ACCESSKEYID")
+	if !ok {
+		fmt.Fprintln(os.Stdout, errors.New("failed to get access key").Error())
+	}
+	secretAccessKey, ok := os.LookupEnv("SECRETACCESSKEY")
+	if !ok {
+		fmt.Fprintln(os.Stdout, errors.New("failed to get secret access key").Error())
+	}
 	token := ""
 	region := os.Getenv("REGION")
 	creds := credentials.NewStaticCredentials(accessKeyID, secretAccessKey, token)
